@@ -9,14 +9,10 @@ type Person struct {
 }
 
 func MakePerson(firstName string, lastName string, age int) Person {
-	personNormal := Person{firstName, lastName, age}
-	return personNormal
-}
+	return Person{firstName, lastName, age}}
 
 func MakePersonPointer(firstName string, lastName string, age int) *Person {
-	personPointer := Person{firstName, lastName, age}
-	return &personPointer
-}
+	return &Person{firstName, lastName, age}}
 
 func main() {
 	lucas := MakePerson("Lucas", "Teuber", 21)
@@ -25,3 +21,4 @@ func main() {
 	fmt.Println(lucas)
 	fmt.Println(rolf)
 }
+
