@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 )
 
 type Team struct {
@@ -36,6 +37,17 @@ func (l League) MatchResult(aTeam string, aScore int, bTeam string, bScore int) 
 // Ranking
 // returns a slice of the team names in order of wins.
 
+func (l League) Ranking() []string {
+	names := make([]string, 0, len(l.Teams))
+	for k := range l.Teams {
+		names = append(names, k)
+	}
+	sort.Slice(names, func(i, j int) bool {
+		return l.Wins[names[i]] > l.Wins[names[j]]
+	})
+	return names
+}
+
 // Build your data structures and call these methods from the main function in your program using some sample data
 
 func main() {
@@ -47,21 +59,34 @@ func main() {
 		"Philadelphia Eagles",
 		[]string{"Jalen Hurts", "Saquon Barkley"},
 	}
+	commanders := Team{
+		"Washington Commanders",
+		[]string{"Jayden Daniels", "Terry McLaurin"},
+	}
 	nfl := League{
 		Name: "National Football League",
 		Teams: map[string]Team{
-			"chiefs": chiefs,
-			"eagles": eagles,
+			"Philadelphia Eagles": eagles,
+			"Kansas City Chiefs": chiefs,
+			"Washington Commanders": commanders,
 		},
 		Wins: map[string]int{
-			"chiefs": 0,
-			"eagles": 0,
+			"Philadelphia Eagles": 0,
+			"Kansas City Chiefs": 0,
+			"Washington Commanders": 0,
 		},
 	}
 
 	fmt.Println(nfl)
 
+	nfl.MatchResult("commanders", 1000, "eagles", 0)
+	nfl.MatchResult("chiefs", 50, "commanders", 51)
 	nfl.MatchResult("chiefs", 22, "eagles", 40)
 
 	fmt.Println(nfl)
+
+	ranking := nfl.Ranking()
+
+	fmt.Println(ranking)
 }
+
