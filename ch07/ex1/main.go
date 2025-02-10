@@ -5,33 +5,36 @@ import (
 )
 
 type Team struct {
-	teamName    string
-	playerNames []string
+	Name    string
+	Players []string
 }
 
 type League struct {
-	Teams []Team
+	Name  string
+	Teams map[string]Team
 	Wins  map[string]int
 }
 
 func main() {
 	chiefs := Team{
-		teamName:    "Kansas City Chiefs",
-		playerNames: []string{"Travis Kelce", "Patrick Mahomes"},
+		"Kansas City Chiefs",
+		[]string{"Travis Kelce", "Patrick Mahomes"},
 	}
 	eagles := Team{
-		teamName:    "Philadelphia Eagles",
-		playerNames: []string{"Jalen Hurts", "Saquon Barkley"},
+		"Philadelphia Eagles",
+		[]string{"Jalen Hurts", "Saquon Barkley"},
 	}
 	nfl := League{
-		Teams: []Team{eagles, chiefs},
+		Name: "National Football League",
+		Teams: map[string]Team{
+			"chiefs": chiefs,
+			"eagles": eagles,
+		},
 		Wins: map[string]int{
 			"chiefs": 0,
 			"eagles": 1,
 		},
 	}
 
-	fmt.Println(chiefs)
-	fmt.Println(eagles)
 	fmt.Println(nfl)
 }
