@@ -66,13 +66,13 @@ func main() {
 	nfl := League{
 		Name: "National Football League",
 		Teams: map[string]Team{
-			"Philadelphia Eagles": eagles,
-			"Kansas City Chiefs": chiefs,
+			"Philadelphia Eagles":   eagles,
+			"Kansas City Chiefs":    chiefs,
 			"Washington Commanders": commanders,
 		},
 		Wins: map[string]int{
-			"Philadelphia Eagles": 0,
-			"Kansas City Chiefs": 0,
+			"Philadelphia Eagles":   0,
+			"Kansas City Chiefs":    0,
 			"Washington Commanders": 0,
 		},
 	}
@@ -89,4 +89,3 @@ func main() {
 
 	fmt.Println(ranking)
 }
-
