@@ -38,17 +38,32 @@ func (l *List[T]) Add(value T) {
 
 func (l *List[T]) Insert(value T, position int) {
 	n := &Node[T]{Value: value}
-	if position == 0 {
+	if l.Head == nil {
+		l.Head = n
+		l.Tail = n
+		return
+	}
+	if position <= 0 {
+		// if index negative of 0, insert at head
 		n.Next = l.Head
 		l.Head = n
 		return
 	}
 	c := l.Head
 	for i := 1; i < position; i++ {
+		// if index too high, just stick it on the end
+		if c.Next == nil {
+			c.Next = n
+			l.Tail = c.Next
+			return
+		}
 		c = c.Next
 	}
 	n.Next = c.Next
 	c.Next = n
+	if l.Tail == c {
+		l.Tail = n
+	}
 }
 
 func (l *List[T]) Index(value T) int {
