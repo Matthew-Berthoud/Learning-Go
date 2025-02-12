@@ -52,15 +52,14 @@ func (l *List[T]) Insert(value T, position int) {
 }
 
 func (l *List[T]) Index(value T) int {
-	c := l.Head
 	i := 0
-	for ; c.Value != value; i++ {
-		if c.Next == nil {
-			panic("value not found")
+	for c := l.Head; c != nil; c = c.Next {
+		if c.Value == value {
+			return i
 		}
-		c = c.Next
+		i++
 	}
-	return i
+	return -1
 }
 
 func (l *List[T]) Print() {
@@ -89,4 +88,5 @@ func main() {
 
 	fmt.Println(l.Index(3))
 	fmt.Println(l.Index(2))
+	fmt.Println(l.Index(82742))
 }
