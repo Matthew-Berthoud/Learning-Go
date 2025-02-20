@@ -7,6 +7,9 @@ import (
 	"regexp"
 	"strings"
 )
+// Create a sentinel error to represent an invalid ID.
+// In main, use errors.Is to check for the sentinel error,
+// and print a message when it is found.
 
 func main() {
 	d := json.NewDecoder(strings.NewReader(data))
