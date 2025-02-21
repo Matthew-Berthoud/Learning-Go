@@ -7,9 +7,9 @@ import (
 	"regexp"
 	"strings"
 )
+
 // Create a sentinel error to represent an invalid ID.
-// In main, use errors.Is to check for the sentinel error,
-// and print a message when it is found.
+var ErrInvalidID = errors.New("invalid ID")
 
 func main() {
 	d := json.NewDecoder(strings.NewReader(data))
@@ -24,7 +24,13 @@ func main() {
 		}
 		err = ValidateEmployee(emp)
 		if err != nil {
-			fmt.Printf("record %d: %+v error: %v\n", count, emp, err)
+			// In main, use errors.Is to check for the sentinel error,
+			// and print a message when it is found.
+			if errors.Is(err, ErrInvalidID) {
+				fmt.Printf("record %d: %+v error: invalid ID: %s\n", count, emp, emp.ID)
+			} else {
+				fmt.Printf("record %d: %+v error: %v\n", count, emp, err)
+			}
 			continue
 		}
 		fmt.Printf("record %d: %+v\n", count, emp)
