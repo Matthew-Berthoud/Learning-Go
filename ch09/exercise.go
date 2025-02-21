@@ -11,6 +11,16 @@ import (
 // Create a sentinel error to represent an invalid ID.
 var ErrInvalidID = errors.New("invalid ID")
 
+// Define a custom error type to represent an empty field error.
+// This error should include the name of the empty Employee field.
+type EmptyFieldError struct {
+	FieldName string
+}
+
+func (fe EmptyFieldError) Error() string {
+	return fe.FieldName
+}
+
 func main() {
 	d := json.NewDecoder(strings.NewReader(data))
 	count := 0
@@ -23,11 +33,18 @@ func main() {
 			continue
 		}
 		err = ValidateEmployee(emp)
+		var emptyFieldErr EmptyFieldError
 		if err != nil {
 			// In main, use errors.Is to check for the sentinel error,
 			// and print a message when it is found.
+
+			// In main, use errors.As to check for this error.
+			// Print out a message that includes the field name.
+
 			if errors.Is(err, ErrInvalidID) {
 				fmt.Printf("record %d: %+v error: invalid ID: %s\n", count, emp, emp.ID)
+			} else if errors.As(err, &emptyFieldErr) {
+				fmt.Printf("record %d: %+v error: empty field %s\n", count, emp, emptyFieldErr.FieldName)
 			} else {
 				fmt.Printf("record %d: %+v error: %v\n", count, emp, err)
 			}
@@ -95,19 +112,19 @@ var (
 
 func ValidateEmployee(e Employee) error {
 	if len(e.ID) == 0 {
-		return errors.New("missing ID")
+		return EmptyFieldError{FieldName: "ID"}
 	}
 	if !validID.MatchString(e.ID) {
-		return errors.New("invalid ID")
+		return ErrInvalidID
 	}
 	if len(e.FirstName) == 0 {
-		return errors.New("missing FirstName")
+		return EmptyFieldError{FieldName: "FirstName"}
 	}
 	if len(e.LastName) == 0 {
-		return errors.New("missing LastName")
+		return EmptyFieldError{FieldName: "LastName"}
 	}
 	if len(e.Title) == 0 {
-		return errors.New("missing Title")
+		return EmptyFieldError{FieldName: "Title"}
 	}
 	return nil
 }
