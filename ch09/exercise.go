@@ -33,24 +33,38 @@ func main() {
 			continue
 		}
 		err = ValidateEmployee(emp)
-		var emptyFieldErr EmptyFieldError
+		message := fmt.Sprintf("record %d: %+v", count, emp)
 		if err != nil {
-			// In main, use errors.Is to check for the sentinel error,
-			// and print a message when it is found.
-
-			// In main, use errors.As to check for this error.
-			// Print out a message that includes the field name.
-
-			if errors.Is(err, ErrInvalidID) {
-				fmt.Printf("record %d: %+v error: invalid ID: %s\n", count, emp, emp.ID)
-			} else if errors.As(err, &emptyFieldErr) {
-				fmt.Printf("record %d: %+v error: empty field %s\n", count, emp, emptyFieldErr.FieldName)
-			} else {
-				fmt.Printf("record %d: %+v error: %v\n", count, emp, err)
+			// use a type switch to detect an error that can be unwrapped into multiple errors
+			switch err := err.(type) {
+			case interface{ Unwrap() []error }:
+				// if we have one use a loop to walk through allErrors and build a single string
+				allErrors := err.Unwrap()
+				var messages []string
+				for _, e := range allErrors {
+					messages = append(messages, processError(e, emp))
+				}
+				message = message + " allErrors: " + strings.Join(messages, ", ")
+			default:
+				message = message + " error: " + processError(err, emp)
 			}
-			continue
 		}
-		fmt.Printf("record %d: %+v\n", count, emp)
+		fmt.Println(message)
+	}
+}
+
+/*
+processError is a method for converting an error into a message. It has special handling for ErrInvalidID and
+EmptyFieldError.
+*/
+func processError(err error, emp Employee) string {
+	var fieldErr EmptyFieldError
+	if errors.Is(err, ErrInvalidID) {
+		return fmt.Sprintf("invalid ID: %s", emp.ID)
+	} else if errors.As(err, &fieldErr) {
+		return fmt.Sprintf("empty field %s", fieldErr.FieldName)
+	} else {
+		return fmt.Sprintf("%v", err)
 	}
 }
 
