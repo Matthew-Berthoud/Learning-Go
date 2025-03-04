@@ -1,3 +1,6 @@
 [submodule "ch10/my_workspace/workspace_lib"]
 	path = ch10/my_workspace/workspace_lib
 	url = git@github.com:Matthew-Berthoud/workspace_lib.git
+[submodule "ch10_exercises_module"]
+	path = ch10/ch10_exercises_module
+	url = git@github.com:Matthew-Berthoud/ch10_exercises_module.git
