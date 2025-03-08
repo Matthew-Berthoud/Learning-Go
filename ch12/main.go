@@ -10,6 +10,25 @@ import "fmt"
 // You can create additional goroutines if needed.
 func ex1() {
 	fmt.Println("Exercise 1")
+	ch := make(chan int)
+	for i:= 0; i < 2; i++ {
+		go func() {
+			for j:= 0; j < 10; j++ {
+				// write even then odd numbers
+				toWrite := j*2 + i
+				ch <- toWrite
+			}
+		}()
+	}
+	for ;; {
+		v, ok := <-ch
+		fmt.Printf("%d ", v)
+		if !ok {
+			fmt.Println()
+			close(ch)
+			return
+		}
+	}
 }
 
 // Create a function that launches two goroutines.
