@@ -1,34 +1,61 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
-// Create a function that launches three goroutines that communicate using a channel.
-// The first two goroutines each write 10 numbers to the channel.
-// The third goroutine reads all the numbers from the channel and prints them out.
-// The function should exit when all values have been printed out.
-// Make sure that none of the goroutines leak.
-// You can create additional goroutines if needed.
+/*
+1. Create a function that launches three goroutines that communicate using a channel.
+The first two goroutines each write 10 numbers to the channel.
+The third goroutine reads all the numbers from the channel and prints them out.
+The function should exit when all values have been printed out.
+Make sure that none of the goroutines leak.
+You can create additional goroutines, if needed.
+*/
+
 func ex1() {
 	fmt.Println("Exercise 1")
 	ch := make(chan int)
-	for i:= 0; i < 2; i++ {
-		go func() {
-			for j:= 0; j < 10; j++ {
-				// write even then odd numbers
-				toWrite := j*2 + i
-				ch <- toWrite
-			}
-		}()
-	}
-	for ;; {
-		v, ok := <-ch
-		fmt.Printf("%d ", v)
-		if !ok {
-			fmt.Println()
-			close(ch)
-			return
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		for j := 0; j < 10; j++ {
+			ch <- j * 2 // write even numbers
 		}
-	}
+
+	}()
+	go func() {
+		defer wg.Done()
+		for j := 0; j < 10; j++ {
+			ch <- j*2 + 1 // write odd numbers
+		}
+	}()
+
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+
+	var wg2 sync.WaitGroup
+	wg2.Add(1)
+	go func() {
+		defer wg2.Done()
+		for v := range ch {
+			fmt.Println(v)
+		}
+		//		for ;; {
+		//			v, ok := <-ch
+		//			fmt.Printf("%d ", v)
+		//			if !ok {
+		//				fmt.Println()
+		//				return
+		//			}
+		//		}
+	}()
+	wg2.Wait()
 }
 
 // Create a function that launches two goroutines.
