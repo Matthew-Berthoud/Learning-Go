@@ -46,24 +46,51 @@ func ex1() {
 		for v := range ch {
 			fmt.Println(v)
 		}
-		//		for ;; {
-		//			v, ok := <-ch
-		//			fmt.Printf("%d ", v)
-		//			if !ok {
-		//				fmt.Println()
-		//				return
-		//			}
-		//		}
 	}()
 	wg2.Wait()
 }
 
-// Create a function that launches two goroutines.
-// Each goroutine writes 10 numbers to its own channel.
-// Use a for-select loop to read from both channels, printing out the number and the goroutine that wrote the value.
-// Make sure that your function exits after all values are read and that none of your goroutines leak.
+/*
+2. Create a function that launches two goroutines.
+Each goroutine writes 10 numbers to its own channel.
+Use a for-select loop to read from both channels, printing out the number and the goroutine that wrote the value.
+Make sure that your function exits after all values are read and that none of your goroutines leak.
+*/
 func ex2() {
 	fmt.Println("Exercise 2")
+	ch := make(chan int)
+	ch2 := make(chan int)
+	go func() {
+		for j := 0; j < 10; j++ {
+			ch <- j * 2 // write even numbers
+		}
+		close(ch)
+	}()
+	go func() {
+		for j := 0; j < 10; j++ {
+			ch2 <- j*2 + 1 // write odd numbers
+		}
+		close(ch2)
+	}()
+	count := 2
+	for count != 0 {
+		select {
+		case v, ok := <-ch:
+			if !ok {
+				ch = nil
+				count--
+				break
+			}
+			fmt.Printf("%d, from channel 1\n", v)
+		case v, ok := <-ch2:
+			if !ok {
+				ch2 = nil
+				count--
+				break
+			}
+			fmt.Printf("%d, from channel 2\n", v)
+		}
+	}
 }
 
 // Write a function that builds a map[int]float64 where the keys are the numbers from 0 (inclusive) to 100,000 (exclusive)
