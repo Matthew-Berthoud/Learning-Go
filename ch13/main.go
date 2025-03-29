@@ -31,18 +31,16 @@ import (
 
 type TimeHandler struct{}
 
-func (hh TimeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	t := time.Now().Format(time.RFC3339)
-	w.Write([]byte(t + "\n"))
-}
-
 func main() {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		t := time.Now().Format(time.RFC3339)
+		w.Write([]byte(t + "\n"))
+	})
+
 	s := http.Server{
-		Addr:         ":8080",
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 90 * time.Second,
-		IdleTimeout:  120 * time.Second,
-		Handler:      TimeHandler{},
+		Addr:    ":8080",
+		Handler: mux,
 	}
 	err := s.ListenAndServe()
 	if err != nil {
