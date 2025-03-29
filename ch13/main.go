@@ -25,14 +25,26 @@ Exercises
 package main
 
 import (
+	"log/slog"
 	"net/http"
+	"os"
 	"time"
 )
 
-type TimeHandler struct{}
+func IpLogger(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		options := &slog.HandlerOptions{Level: slog.LevelInfo}
+		handler := slog.NewJSONHandler(os.Stderr, options)
+		mySlog := slog.New(handler)
+		srcIp := r.RemoteAddr
+		mySlog.Info("New Request",
+			"IP", srcIp)
+	})
+}
 
 func main() {
 	mux := http.NewServeMux()
+	wrappedMux := IpLogger(mux)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		t := time.Now().Format(time.RFC3339)
 		w.Write([]byte(t + "\n"))
@@ -40,7 +52,7 @@ func main() {
 
 	s := http.Server{
 		Addr:    ":8080",
-		Handler: mux,
+		Handler: wrappedMux,
 	}
 	err := s.ListenAndServe()
 	if err != nil {
