@@ -1,63 +1,107 @@
-/*
-Exercises
-
-1.	Write a small web server that returns the current time in RFC 3339 format
-	when you send it a GET command. You can use a third-party module if you’d
-	like.
-
-2.	Write a small middleware component that uses JSON structured logging to
-	log the IP address of each incoming request to your web server.
-
-3.	Add the ability to return the time as JSON. Use the Accept header to
-	control whether JSON or text is returned (default to text). The JSON
-	should be structured as follows:
-{
-    "day_of_week": "Monday",
-    "day_of_month": 10,
-    "month": "April",
-    "year": 2023,
-    "hour": 20,
-    "minute": 15,
-    "second": 20
-}
-*/
-
 package main
 
 import (
+	"encoding/json"
+	"errors"
+	"github.com/go-chi/chi/v5"
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
-func IpLogger(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		options := &slog.HandlerOptions{Level: slog.LevelInfo}
-		handler := slog.NewJSONHandler(os.Stderr, options)
-		mySlog := slog.New(handler)
-		srcIp := r.RemoteAddr
-		mySlog.Info("New Request",
-			"IP", srcIp)
-	})
-}
+/*
+Add the ability to return the time as JSON. Use the +accept+ header to control
+whether JSON or text is returned (default to text).
 
+The JSON should be structured as:
+
+	{
+	    "day_of_week": "Monday",
+	    "day_of_month": 10,
+	    "month": "April",
+	    "year": 2023,
+	    "hour": 20,
+	    "minute": 15,
+	    "second": 20
+	}
+*/
 func main() {
-	mux := http.NewServeMux()
-	wrappedMux := IpLogger(mux)
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		t := time.Now().Format(time.RFC3339)
-		w.Write([]byte(t + "\n"))
-	})
-
+	options := &slog.HandlerOptions{}
+	handler := slog.NewJSONHandler(os.Stderr, options)
+	mySlog := slog.New(handler)
+	r := createChiRouter(mySlog)
 	s := http.Server{
-		Addr:    ":8080",
-		Handler: wrappedMux,
+		Addr:         ":8080",
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 90 * time.Second,
+		IdleTimeout:  120 * time.Second,
+		Handler:      r,
 	}
 	err := s.ListenAndServe()
 	if err != nil {
-		if err != http.ErrServerClosed {
+		if !errors.Is(err, http.ErrServerClosed) {
 			panic(err)
 		}
 	}
+}
+
+func createChiRouter(logger *slog.Logger) chi.Router {
+	r := chi.NewRouter().With(func(handler http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			ip, _, _ := strings.Cut(req.RemoteAddr, ":")
+			logger.Info("incoming IP", "ip", ip)
+			handler.ServeHTTP(rw, req)
+		})
+	})
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		now := time.Now()
+		var out string
+		if r.Header.Get("Accept") == "application/json" {
+			out = buildJSON(now)
+		} else {
+			out = buildText(now)
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(out))
+	})
+	return r
+}
+
+func buildText(now time.Time) string {
+	return now.Format(time.RFC3339)
+}
+
+/*
+	  {
+	    "day_of_week": "Monday",
+	    "day_of_month": 10,
+	    "month": "April",
+	    "year": 2023,
+	    "hour": 20,
+	    "minute": 15,
+	    "second": 20
+	}
+*/
+func buildJSON(now time.Time) string {
+	timeOut := struct {
+		DayOfWeek  string `json:"day_of_week"`
+		DayOfMonth int    `json:"day_of_month"`
+		Month      string `json:"month"`
+		Year       int    `json:"year"`
+		Hour       int    `json:"hour"`
+		Minute     int    `json:"minute"`
+		Second     int    `json:"second"`
+	}{
+		DayOfWeek:  now.Weekday().String(),
+		DayOfMonth: now.Day(),
+		Month:      now.Month().String(),
+		Year:       now.Year(),
+		Hour:       now.Hour(),
+		Minute:     now.Minute(),
+		Second:     now.Second(),
+	}
+	out, _ := json.Marshal(timeOut)
+	return string(out)
 }
